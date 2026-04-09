@@ -76,12 +76,7 @@
         });
 
         context.start({
-          disableIdleTimeout: true,
-          customNamespaces: (function () {
-            var namespaces = {};
-            namespaces[NAMESPACE] = cast.framework.system.MessageType.STRING;
-            return namespaces;
-          }())
+          disableIdleTimeout: true
         });
       } catch (error) {
         setSubtitle("Receiver error: " + (error && error.message ? error.message : "Unknown"));
