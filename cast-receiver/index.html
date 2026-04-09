@@ -67,11 +67,11 @@
 
         context.addCustomMessageListener(NAMESPACE, function (event) {
           try {
-            var state = JSON.parse(event.data);
+            var state = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
             title.textContent = state.mode || "PuzzleStreak";
-            setSubtitle("Round " + state.roundNumber + " • Streak " + state.currentStreak);
+            setSubtitle("Round " + state.roundNumber + " - Streak " + state.currentStreak);
           } catch (error) {
-            setSubtitle("State parse failed");
+            setSubtitle("State parse failed: " + (error && error.message ? error.message : "Unknown"));
           }
         });
 
