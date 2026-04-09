@@ -4,32 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PuzzleStreak Receiver</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #111827;
-      color: #f9fafb;
-      font: 24px/1.4 Arial, sans-serif;
-    }
-
-    .shell {
-      width: min(960px, 92vw);
-      text-align: center;
-    }
-
-    .title {
-      font-size: 48px;
-      margin: 0 0 16px;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: #d1d5db;
-    }
-  </style>
+  <link rel="stylesheet" href="./styles.css" />
   <script
     type="text/javascript"
     src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js">
@@ -38,18 +13,254 @@
 <body>
   <cast-media-player style="display:none;"></cast-media-player>
   <main class="shell">
-    <h1 class="title" id="title">PuzzleStreak</h1>
-    <p class="subtitle" id="subtitle">Receiver booting...</p>
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">PuzzleStreak</p>
+        <h1 id="modeTitle">Waiting for game</h1>
+        <p id="modeSubtitle">Connect from the PuzzleStreak Android app.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-label">Round</span>
+          <strong id="roundValue">-</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Streak</span>
+          <strong id="streakValue">-</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Best</span>
+          <strong id="bestValue">-</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel" id="wordsPanel" hidden>
+      <div class="panel-header">
+        <h2>Word Round</h2>
+        <span id="wordsStatus" class="status-pill">In progress</span>
+      </div>
+      <div id="wordsGrid" class="word-grid"></div>
+      <p id="wordsMeta" class="panel-meta"></p>
+    </section>
+
+    <section class="panel" id="numbersPanel" hidden>
+      <div class="panel-header">
+        <h2>Number Round</h2>
+        <span id="numbersStatus" class="status-pill">In progress</span>
+      </div>
+      <div class="numbers-summary">
+        <div class="target-card">
+          <span>Target</span>
+          <strong id="numbersTarget">-</strong>
+        </div>
+        <div id="numbersSources" class="number-chip-row"></div>
+      </div>
+      <div>
+        <h3 class="subheading">Submitted lines</h3>
+        <ul id="numbersRows" class="expression-list"></ul>
+      </div>
+      <p id="numbersActive" class="panel-meta"></p>
+    </section>
+
+    <section class="panel" id="knowledgePanel" hidden>
+      <div class="panel-header">
+        <h2 id="knowledgeCategory">Trivia Round</h2>
+        <span id="knowledgeStatus" class="status-pill">In progress</span>
+      </div>
+      <div id="knowledgeEntries" class="knowledge-list"></div>
+      <p id="knowledgeMeta" class="panel-meta"></p>
+    </section>
   </main>
 
   <script type="text/javascript">
     (function () {
       var NAMESPACE = "urn:x-cast:com.gware.puzzlestreak.game";
-      var title = document.getElementById("title");
-      var subtitle = document.getElementById("subtitle");
+      var context;
+
+      var modeTitle = document.getElementById("modeTitle");
+      var modeSubtitle = document.getElementById("modeSubtitle");
+      var roundValue = document.getElementById("roundValue");
+      var streakValue = document.getElementById("streakValue");
+      var bestValue = document.getElementById("bestValue");
+
+      var wordsPanel = document.getElementById("wordsPanel");
+      var wordsStatus = document.getElementById("wordsStatus");
+      var wordsGrid = document.getElementById("wordsGrid");
+      var wordsMeta = document.getElementById("wordsMeta");
+
+      var numbersPanel = document.getElementById("numbersPanel");
+      var numbersStatus = document.getElementById("numbersStatus");
+      var numbersTarget = document.getElementById("numbersTarget");
+      var numbersSources = document.getElementById("numbersSources");
+      var numbersRows = document.getElementById("numbersRows");
+      var numbersActive = document.getElementById("numbersActive");
+
+      var knowledgePanel = document.getElementById("knowledgePanel");
+      var knowledgeCategory = document.getElementById("knowledgeCategory");
+      var knowledgeStatus = document.getElementById("knowledgeStatus");
+      var knowledgeEntries = document.getElementById("knowledgeEntries");
+      var knowledgeMeta = document.getElementById("knowledgeMeta");
 
       function setSubtitle(message) {
-        subtitle.textContent = message;
+        modeSubtitle.textContent = message;
+      }
+
+      function normalizeLabel(value) {
+        return String(value || "").split("_").join(" ");
+      }
+
+      function setStatusPill(element, status) {
+        var normalized = normalizeLabel(status || "IN_PROGRESS");
+        element.textContent = normalized;
+        if (status === "WON") {
+          element.style.color = "var(--good)";
+        } else if (status === "LOST" || status === "FAILED") {
+          element.style.color = "var(--accent)";
+        } else {
+          element.style.color = "var(--warn)";
+        }
+      }
+
+      function clearPanels() {
+        wordsPanel.hidden = true;
+        numbersPanel.hidden = true;
+        knowledgePanel.hidden = true;
+      }
+
+      function renderWords(words) {
+        var rows = words && words.guesses ? words.guesses.slice() : [];
+        var guessIndex;
+        var row;
+        var i;
+        var tile;
+        var wordLength = words && words.wordLength ? words.wordLength : 5;
+        var currentEntry = words && words.currentEntry ? words.currentEntry : "";
+
+        wordsPanel.hidden = false;
+        setStatusPill(wordsStatus, words ? words.status : null);
+        wordsGrid.innerHTML = "";
+
+        if (currentEntry) {
+          rows.push(currentEntry);
+        }
+        while (rows.length < 6) {
+          rows.push("");
+        }
+
+        for (guessIndex = 0; guessIndex < rows.length; guessIndex += 1) {
+          row = document.createElement("div");
+          row.className = "word-row";
+          for (i = 0; i < wordLength; i += 1) {
+            tile = document.createElement("div");
+            tile.className = "tile" + (rows[guessIndex] && rows[guessIndex][i] ? " filled" : "");
+            tile.textContent = rows[guessIndex] && rows[guessIndex][i] ? rows[guessIndex][i] : "";
+            row.appendChild(tile);
+          }
+          wordsGrid.appendChild(row);
+        }
+
+        wordsMeta.textContent = words ? words.guessesRemaining + " guesses remaining" : "";
+      }
+
+      function renderNumbers(numbers) {
+        var valueIndex;
+        var expressionIndex;
+        var chip;
+        var empty;
+        var item;
+        var sourceNumbers = numbers && numbers.sourceNumbers ? numbers.sourceNumbers : [];
+        var submittedExpressions = numbers && numbers.submittedExpressions ? numbers.submittedExpressions : [];
+
+        numbersPanel.hidden = false;
+        setStatusPill(numbersStatus, numbers ? numbers.status : null);
+        numbersTarget.textContent = numbers ? numbers.targetNumber : "-";
+        numbersSources.innerHTML = "";
+        numbersRows.innerHTML = "";
+
+        for (valueIndex = 0; valueIndex < sourceNumbers.length; valueIndex += 1) {
+          chip = document.createElement("div");
+          chip.className = "number-chip";
+          chip.textContent = String(sourceNumbers[valueIndex]);
+          numbersSources.appendChild(chip);
+        }
+
+        if (submittedExpressions.length === 0) {
+          empty = document.createElement("li");
+          empty.className = "expression-item";
+          empty.textContent = "No submitted lines yet.";
+          numbersRows.appendChild(empty);
+        } else {
+          for (expressionIndex = 0; expressionIndex < submittedExpressions.length; expressionIndex += 1) {
+            item = document.createElement("li");
+            item.className = "expression-item";
+            item.textContent = submittedExpressions[expressionIndex];
+            numbersRows.appendChild(item);
+          }
+        }
+
+        numbersActive.textContent = numbers && numbers.activeExpression
+          ? "Current line: " + numbers.activeExpression
+          : "Current line is still being entered.";
+      }
+
+      function renderKnowledge(knowledge) {
+        var entries = knowledge && knowledge.entries ? knowledge.entries : [];
+        var index;
+        var entry;
+        var item;
+        var clue;
+        var answer;
+
+        knowledgePanel.hidden = false;
+        setStatusPill(knowledgeStatus, knowledge ? knowledge.status : null);
+        knowledgeCategory.textContent = knowledge && knowledge.category
+          ? knowledge.category + " Trivia"
+          : "Trivia Round";
+        knowledgeEntries.innerHTML = "";
+
+        for (index = 0; index < entries.length; index += 1) {
+          entry = entries[index];
+          item = document.createElement("div");
+          clue = document.createElement("p");
+          answer = document.createElement("p");
+
+          item.className = "knowledge-item" + (entry.active ? " active" : "");
+
+          clue.className = "knowledge-clue";
+          clue.textContent = (index + 1) + ". " + entry.clue;
+
+          answer.className = "knowledge-answer";
+          answer.textContent = entry.solvedAnswer
+            ? "Solved: " + entry.solvedAnswer
+            : "Answer length: " + entry.answerLength;
+
+          item.appendChild(clue);
+          item.appendChild(answer);
+          knowledgeEntries.appendChild(item);
+        }
+
+        knowledgeMeta.textContent = knowledge && knowledge.currentEntry
+          ? "Current entry: " + knowledge.currentEntry
+          : "Working on clue " + (((knowledge && typeof knowledge.activeEntryIndex === "number") ? knowledge.activeEntryIndex : 0) + 1);
+      }
+
+      function renderState(state) {
+        modeTitle.textContent = normalizeLabel(state.mode || "PuzzleStreak");
+        setSubtitle("Live group play screen");
+        roundValue.textContent = typeof state.roundNumber === "number" ? state.roundNumber : "-";
+        streakValue.textContent = typeof state.currentStreak === "number" ? state.currentStreak : "-";
+        bestValue.textContent = typeof state.bestStreak === "number" ? state.bestStreak : "-";
+
+        clearPanels();
+
+        if (state.mode === "WORDS" && state.words) {
+          renderWords(state.words);
+        } else if (state.mode === "NUMBERS" && state.numbers) {
+          renderNumbers(state.numbers);
+        } else if (state.mode === "KNOWLEDGE" && state.knowledge) {
+          renderKnowledge(state.knowledge);
+        }
       }
 
       window.onerror = function (message) {
@@ -62,14 +273,13 @@
           return;
         }
 
-        var context = cast.framework.CastReceiverContext.getInstance();
+        context = cast.framework.CastReceiverContext.getInstance();
         setSubtitle("Receiver ready. Waiting for game state...");
 
         context.addCustomMessageListener(NAMESPACE, function (event) {
           try {
             var state = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-            title.textContent = state.mode || "PuzzleStreak";
-            setSubtitle("Round " + state.roundNumber + " - Streak " + state.currentStreak);
+            renderState(state);
           } catch (error) {
             setSubtitle("State parse failed: " + (error && error.message ? error.message : "Unknown"));
           }
