@@ -158,13 +158,14 @@ context.addCustomMessageListener(NAMESPACE, (event) => {
 });
 
 window.addEventListener("error", (event) => {
+  const details = event.message || (event.error && event.error.message) || "Unknown receiver error";
   console.error("Receiver runtime error", event.error || event.message);
-  setSubtitle("Receiver error. Check receiver.js deployment.");
+  setSubtitle(`Receiver error: ${details}`);
 });
 
-const options = new cast.framework.CastReceiverOptions();
-options.disableIdleTimeout = true;
-options.customNamespaces = {};
-options.customNamespaces[NAMESPACE] = cast.framework.system.MessageType.STRING;
-
-context.start(options);
+context.start({
+  disableIdleTimeout: true,
+  customNamespaces: {
+    [NAMESPACE]: cast.framework.system.MessageType.STRING,
+  },
+});
