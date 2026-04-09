@@ -25,6 +25,10 @@ const knowledgeStatus = document.getElementById("knowledgeStatus");
 const knowledgeEntries = document.getElementById("knowledgeEntries");
 const knowledgeMeta = document.getElementById("knowledgeMeta");
 
+function setSubtitle(message) {
+  modeSubtitle.textContent = message;
+}
+
 function setStatusPill(element, status) {
   const normalized = (status || "IN_PROGRESS").replaceAll("_", " ");
   element.textContent = normalized;
@@ -145,15 +149,22 @@ function renderState(state) {
 context.addCustomMessageListener(NAMESPACE, (event) => {
   try {
     const state = JSON.parse(event.data);
+    setSubtitle("Live group play screen");
     renderState(state);
   } catch (error) {
     console.error("Failed to parse PuzzleStreak cast state", error);
+    setSubtitle("Unable to parse game state.");
   }
 });
 
-context.start({
-  disableIdleTimeout: true,
-  customNamespaces: {
-    [NAMESPACE]: cast.framework.system.MessageType.STRING,
-  },
+window.addEventListener("error", (event) => {
+  console.error("Receiver runtime error", event.error || event.message);
+  setSubtitle("Receiver error. Check receiver.js deployment.");
 });
+
+const options = new cast.framework.CastReceiverOptions();
+options.disableIdleTimeout = true;
+options.customNamespaces = {};
+options.customNamespaces[NAMESPACE] = cast.framework.system.MessageType.STRING;
+
+context.start(options);
