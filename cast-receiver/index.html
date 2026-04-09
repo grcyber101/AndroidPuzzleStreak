@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PuzzleStreak Receiver</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script
+    type="text/javascript"
+    src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js">
+  </script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">PuzzleStreak</p>
+        <h1 id="modeTitle">Waiting for game</h1>
+        <p id="modeSubtitle">Connect from the PuzzleStreak Android app.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-label">Round</span>
+          <strong id="roundValue">-</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Streak</span>
+          <strong id="streakValue">-</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Best</span>
+          <strong id="bestValue">-</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel" id="wordsPanel" hidden>
+      <div class="panel-header">
+        <h2>Word Round</h2>
+        <span id="wordsStatus" class="status-pill">In progress</span>
+      </div>
+      <div id="wordsGrid" class="word-grid"></div>
+      <p id="wordsMeta" class="panel-meta"></p>
+    </section>
+
+    <section class="panel" id="numbersPanel" hidden>
+      <div class="panel-header">
+        <h2>Number Round</h2>
+        <span id="numbersStatus" class="status-pill">In progress</span>
+      </div>
+      <div class="numbers-summary">
+        <div class="target-card">
+          <span>Target</span>
+          <strong id="numbersTarget">-</strong>
+        </div>
+        <div id="numbersSources" class="number-chip-row"></div>
+      </div>
+      <div>
+        <h3 class="subheading">Submitted lines</h3>
+        <ul id="numbersRows" class="expression-list"></ul>
+      </div>
+      <p id="numbersActive" class="panel-meta"></p>
+    </section>
+
+    <section class="panel" id="knowledgePanel" hidden>
+      <div class="panel-header">
+        <h2 id="knowledgeCategory">Trivia Round</h2>
+        <span id="knowledgeStatus" class="status-pill">In progress</span>
+      </div>
+      <div id="knowledgeEntries" class="knowledge-list"></div>
+      <p id="knowledgeMeta" class="panel-meta"></p>
+    </section>
+  </main>
+
+  <script type="text/javascript" src="./receiver.js"></script>
+</body>
+</html>
