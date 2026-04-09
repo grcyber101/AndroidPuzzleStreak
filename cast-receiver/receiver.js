@@ -29,8 +29,12 @@ function setSubtitle(message) {
   modeSubtitle.textContent = message;
 }
 
+function normalizeLabel(value) {
+  return String(value || "").split("_").join(" ");
+}
+
 function setStatusPill(element, status) {
-  const normalized = (status || "IN_PROGRESS").replaceAll("_", " ");
+  const normalized = normalizeLabel(status || "IN_PROGRESS");
   element.textContent = normalized;
   if (status === "WON") {
     element.style.color = "var(--good)";
@@ -131,7 +135,7 @@ function renderKnowledge(knowledge) {
 }
 
 function renderState(state) {
-  modeTitle.textContent = state.mode.replaceAll("_", " ");
+  modeTitle.textContent = normalizeLabel(state.mode);
   modeSubtitle.textContent = "Live group play screen";
   roundValue.textContent = state.roundNumber;
   streakValue.textContent = state.currentStreak;
