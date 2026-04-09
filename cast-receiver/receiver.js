@@ -1,29 +1,29 @@
-const context = cast.framework.CastReceiverContext.getInstance();
-const NAMESPACE = "urn:x-cast:com.gware.puzzlestreak.game";
+var context = cast.framework.CastReceiverContext.getInstance();
+var NAMESPACE = "urn:x-cast:com.gware.puzzlestreak.game";
 
-const modeTitle = document.getElementById("modeTitle");
-const modeSubtitle = document.getElementById("modeSubtitle");
-const roundValue = document.getElementById("roundValue");
-const streakValue = document.getElementById("streakValue");
-const bestValue = document.getElementById("bestValue");
+var modeTitle = document.getElementById("modeTitle");
+var modeSubtitle = document.getElementById("modeSubtitle");
+var roundValue = document.getElementById("roundValue");
+var streakValue = document.getElementById("streakValue");
+var bestValue = document.getElementById("bestValue");
 
-const wordsPanel = document.getElementById("wordsPanel");
-const wordsStatus = document.getElementById("wordsStatus");
-const wordsGrid = document.getElementById("wordsGrid");
-const wordsMeta = document.getElementById("wordsMeta");
+var wordsPanel = document.getElementById("wordsPanel");
+var wordsStatus = document.getElementById("wordsStatus");
+var wordsGrid = document.getElementById("wordsGrid");
+var wordsMeta = document.getElementById("wordsMeta");
 
-const numbersPanel = document.getElementById("numbersPanel");
-const numbersStatus = document.getElementById("numbersStatus");
-const numbersTarget = document.getElementById("numbersTarget");
-const numbersSources = document.getElementById("numbersSources");
-const numbersRows = document.getElementById("numbersRows");
-const numbersActive = document.getElementById("numbersActive");
+var numbersPanel = document.getElementById("numbersPanel");
+var numbersStatus = document.getElementById("numbersStatus");
+var numbersTarget = document.getElementById("numbersTarget");
+var numbersSources = document.getElementById("numbersSources");
+var numbersRows = document.getElementById("numbersRows");
+var numbersActive = document.getElementById("numbersActive");
 
-const knowledgePanel = document.getElementById("knowledgePanel");
-const knowledgeCategory = document.getElementById("knowledgeCategory");
-const knowledgeStatus = document.getElementById("knowledgeStatus");
-const knowledgeEntries = document.getElementById("knowledgeEntries");
-const knowledgeMeta = document.getElementById("knowledgeMeta");
+var knowledgePanel = document.getElementById("knowledgePanel");
+var knowledgeCategory = document.getElementById("knowledgeCategory");
+var knowledgeStatus = document.getElementById("knowledgeStatus");
+var knowledgeEntries = document.getElementById("knowledgeEntries");
+var knowledgeMeta = document.getElementById("knowledgeMeta");
 
 function setSubtitle(message) {
   modeSubtitle.textContent = message;
@@ -34,7 +34,7 @@ function normalizeLabel(value) {
 }
 
 function setStatusPill(element, status) {
-  const normalized = normalizeLabel(status || "IN_PROGRESS");
+  var normalized = normalizeLabel(status || "IN_PROGRESS");
   element.textContent = normalized;
   if (status === "WON") {
     element.style.color = "var(--good)";
@@ -46,92 +46,108 @@ function setStatusPill(element, status) {
 }
 
 function renderWords(words) {
+  var rows;
+  var guessIndex;
+  var row;
+  var i;
+
   wordsPanel.hidden = false;
   setStatusPill(wordsStatus, words.status);
   wordsGrid.innerHTML = "";
 
-  const rows = [...words.guesses];
-  if (words.currentEntry) rows.push(words.currentEntry);
-  while (rows.length < 6) rows.push("");
+  rows = words.guesses.slice();
+  if (words.currentEntry) {
+    rows.push(words.currentEntry);
+  }
+  while (rows.length < 6) {
+    rows.push("");
+  }
 
-  rows.forEach((guess) => {
-    const row = document.createElement("div");
+  for (guessIndex = 0; guessIndex < rows.length; guessIndex += 1) {
+    row = document.createElement("div");
     row.className = "word-row";
-    for (let i = 0; i < words.wordLength; i += 1) {
-      const tile = document.createElement("div");
-      tile.className = `tile${guess[i] ? " filled" : ""}`;
-      tile.textContent = guess[i] || "";
+    for (i = 0; i < words.wordLength; i += 1) {
+      var tile = document.createElement("div");
+      tile.className = "tile" + (rows[guessIndex][i] ? " filled" : "");
+      tile.textContent = rows[guessIndex][i] || "";
       row.appendChild(tile);
     }
     wordsGrid.appendChild(row);
-  });
+  }
 
-  wordsMeta.textContent = `${words.guessesRemaining} guesses remaining`;
+  wordsMeta.textContent = words.guessesRemaining + " guesses remaining";
 }
 
 function renderNumbers(numbers) {
+  var valueIndex;
+  var expressionIndex;
+
   numbersPanel.hidden = false;
   setStatusPill(numbersStatus, numbers.status);
   numbersTarget.textContent = numbers.targetNumber;
   numbersSources.innerHTML = "";
   numbersRows.innerHTML = "";
 
-  numbers.sourceNumbers.forEach((value) => {
-    const chip = document.createElement("div");
+  for (valueIndex = 0; valueIndex < numbers.sourceNumbers.length; valueIndex += 1) {
+    var chip = document.createElement("div");
     chip.className = "number-chip";
-    chip.textContent = String(value);
+    chip.textContent = String(numbers.sourceNumbers[valueIndex]);
     numbersSources.appendChild(chip);
-  });
+  }
 
   if (numbers.submittedExpressions.length === 0) {
-    const empty = document.createElement("li");
+    var empty = document.createElement("li");
     empty.className = "expression-item";
     empty.textContent = "No submitted lines yet.";
     numbersRows.appendChild(empty);
   } else {
-    numbers.submittedExpressions.forEach((expression) => {
-      const item = document.createElement("li");
+    for (expressionIndex = 0; expressionIndex < numbers.submittedExpressions.length; expressionIndex += 1) {
+      var item = document.createElement("li");
       item.className = "expression-item";
-      item.textContent = expression;
+      item.textContent = numbers.submittedExpressions[expressionIndex];
       numbersRows.appendChild(item);
-    });
+    }
   }
 
   numbersActive.textContent = numbers.activeExpression
-    ? `Current line: ${numbers.activeExpression}`
+    ? "Current line: " + numbers.activeExpression
     : "Current line is still being entered.";
 }
 
 function renderKnowledge(knowledge) {
+  var index;
+
   knowledgePanel.hidden = false;
   setStatusPill(knowledgeStatus, knowledge.status);
   knowledgeCategory.textContent = knowledge.category
-    ? `${knowledge.category} Trivia`
+    ? knowledge.category + " Trivia"
     : "Trivia Round";
   knowledgeEntries.innerHTML = "";
 
-  knowledge.entries.forEach((entry, index) => {
-    const item = document.createElement("div");
-    item.className = `knowledge-item${entry.active ? " active" : ""}`;
+  for (index = 0; index < knowledge.entries.length; index += 1) {
+    var entry = knowledge.entries[index];
+    var item = document.createElement("div");
+    var clue = document.createElement("p");
+    var answer = document.createElement("p");
 
-    const clue = document.createElement("p");
+    item.className = "knowledge-item" + (entry.active ? " active" : "");
+
     clue.className = "knowledge-clue";
-    clue.textContent = `${index + 1}. ${entry.clue}`;
+    clue.textContent = (index + 1) + ". " + entry.clue;
 
-    const answer = document.createElement("p");
     answer.className = "knowledge-answer";
     answer.textContent = entry.solvedAnswer
-      ? `Solved: ${entry.solvedAnswer}`
-      : `Answer length: ${entry.answerLength}`;
+      ? "Solved: " + entry.solvedAnswer
+      : "Answer length: " + entry.answerLength;
 
     item.appendChild(clue);
     item.appendChild(answer);
     knowledgeEntries.appendChild(item);
-  });
+  }
 
   knowledgeMeta.textContent = knowledge.currentEntry
-    ? `Current entry: ${knowledge.currentEntry}`
-    : `Working on clue ${knowledge.activeEntryIndex + 1}`;
+    ? "Current entry: " + knowledge.currentEntry
+    : "Working on clue " + (knowledge.activeEntryIndex + 1);
 }
 
 function renderState(state) {
@@ -145,14 +161,20 @@ function renderState(state) {
   numbersPanel.hidden = true;
   knowledgePanel.hidden = true;
 
-  if (state.mode === "WORDS" && state.words) renderWords(state.words);
-  if (state.mode === "NUMBERS" && state.numbers) renderNumbers(state.numbers);
-  if (state.mode === "KNOWLEDGE" && state.knowledge) renderKnowledge(state.knowledge);
+  if (state.mode === "WORDS" && state.words) {
+    renderWords(state.words);
+  }
+  if (state.mode === "NUMBERS" && state.numbers) {
+    renderNumbers(state.numbers);
+  }
+  if (state.mode === "KNOWLEDGE" && state.knowledge) {
+    renderKnowledge(state.knowledge);
+  }
 }
 
-context.addCustomMessageListener(NAMESPACE, (event) => {
+context.addCustomMessageListener(NAMESPACE, function(event) {
   try {
-    const state = JSON.parse(event.data);
+    var state = JSON.parse(event.data);
     setSubtitle("Live group play screen");
     renderState(state);
   } catch (error) {
@@ -161,15 +183,17 @@ context.addCustomMessageListener(NAMESPACE, (event) => {
   }
 });
 
-window.addEventListener("error", (event) => {
-  const details = event.message || (event.error && event.error.message) || "Unknown receiver error";
+window.addEventListener("error", function(event) {
+  var details = event.message || (event.error && event.error.message) || "Unknown receiver error";
   console.error("Receiver runtime error", event.error || event.message);
-  setSubtitle(`Receiver error: ${details}`);
+  setSubtitle("Receiver error: " + details);
 });
 
 context.start({
   disableIdleTimeout: true,
-  customNamespaces: {
-    [NAMESPACE]: cast.framework.system.MessageType.STRING,
-  },
+  customNamespaces: (function() {
+    var namespaces = {};
+    namespaces[NAMESPACE] = cast.framework.system.MessageType.STRING;
+    return namespaces;
+  }()),
 });
