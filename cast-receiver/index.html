@@ -16,64 +16,35 @@
     <main class="round-shell">
       <header class="topbar">
         <div class="title-block">
-          <h1 class="app-title">Puzzle Streak</h1>
+          <h1 class="app-title">Puzzle 🔥 Streak</h1>
           <div class="mode-rail">
             <span class="mode-label" id="modeWord">WORD</span>
             <span class="mode-label" id="modeNumber">NUMBER</span>
             <span class="mode-label" id="modeTrivia">TRIVIA</span>
           </div>
-          <div class="streak-line" id="streakLine">Current Streak 0 | Best Streak 0</div>
-          <div class="status-line" id="statusLine">Connect from the PuzzleStreak Android app.</div>
         </div>
       </header>
 
+      <div class="streak-line" id="streakLine">Current Streak 0 🔥 Best Streak 0</div>
+      <div class="status-line" id="statusLine">Connect from the PuzzleStreak Android app.</div>
+
       <section class="mode-panel" id="wordsPanel">
-        <div class="mode-stage">
-          <div class="stage-left">
-            <div class="words-grid" id="wordsGrid"></div>
-          </div>
-          <aside class="stage-right words-support">
-            <div class="support-card">
-              <div class="support-label">Letter Board</div>
-              <div class="words-keyboard" id="wordsKeyboard"></div>
-            </div>
-          </aside>
-        </div>
+        <div class="words-grid" id="wordsGrid"></div>
       </section>
 
       <section class="mode-panel" id="numbersPanel">
-        <div class="mode-stage">
-          <div class="stage-left">
-            <div class="numbers-board" id="numbersBoard"></div>
-          </div>
-          <aside class="stage-right numbers-support">
-            <div class="support-card numbers-target-card">
-              <div class="support-label">Target</div>
-              <div class="numbers-target" id="numbersTarget">-</div>
-              <div class="support-meta" id="numbersRowsRemaining">Rows left: -</div>
-            </div>
-            <div class="support-card">
-              <div class="support-label">Number Pool</div>
-              <div class="numbers-pool" id="numbersPool"></div>
-            </div>
-          </aside>
-        </div>
+        <div class="status-line" id="numbersRowsRemaining">Rows left: -</div>
+        <div class="numbers-target" id="numbersTarget">-</div>
+        <div class="numbers-source-row" id="numbersSources"></div>
+        <div class="numbers-board" id="numbersBoard"></div>
       </section>
 
       <section class="mode-panel" id="knowledgePanel">
-        <div class="mode-stage">
-          <div class="stage-left">
-            <div class="knowledge-grid" id="knowledgeGrid"></div>
-          </div>
-          <aside class="stage-right knowledge-support">
-            <div class="support-card">
-              <div class="knowledge-category" id="knowledgeCategory">Trivia</div>
-              <div class="knowledge-clue" id="knowledgeClue">Waiting for clue...</div>
-              <div class="knowledge-progress" id="knowledgeProgress">Clue 1 of 3 | 0 / 0</div>
-              <div class="entry-preview" id="entryPreview"></div>
-            </div>
-          </aside>
-        </div>
+        <div class="knowledge-category" id="knowledgeCategory">Trivia</div>
+        <div class="knowledge-clue" id="knowledgeClue">Waiting for clue...</div>
+        <div class="knowledge-progress" id="knowledgeProgress">Clue 1 of 3 - 0 / 0</div>
+        <div class="knowledge-grid" id="knowledgeGrid"></div>
+        <div class="entry-preview" id="entryPreview"></div>
       </section>
 
       <div class="receiver-footer" id="receiverFooter">Receiver ready. Waiting for game state...</div>
@@ -84,11 +55,6 @@
     (function () {
       var NAMESPACE = "urn:x-cast:com.gware.puzzlestreak.game";
       var context;
-      var WORD_KEYBOARD_ROWS = [
-        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-        ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-        ["Z", "X", "C", "V", "B", "N", "M"]
-      ];
 
       var modeWord = document.getElementById("modeWord");
       var modeNumber = document.getElementById("modeNumber");
@@ -99,12 +65,11 @@
 
       var wordsPanel = document.getElementById("wordsPanel");
       var wordsGrid = document.getElementById("wordsGrid");
-      var wordsKeyboard = document.getElementById("wordsKeyboard");
 
       var numbersPanel = document.getElementById("numbersPanel");
       var numbersRowsRemaining = document.getElementById("numbersRowsRemaining");
       var numbersTarget = document.getElementById("numbersTarget");
-      var numbersPool = document.getElementById("numbersPool");
+      var numbersSources = document.getElementById("numbersSources");
       var numbersBoard = document.getElementById("numbersBoard");
 
       var knowledgePanel = document.getElementById("knowledgePanel");
@@ -141,7 +106,7 @@
 
         if (state.mode === "NUMBERS" && state.numbers) {
           if (state.numbers.status === "IN_PROGRESS") {
-            statusLine.textContent = "Numbers round in progress";
+            statusLine.textContent = "Numbers round";
           } else if (state.numbers.status === "WON") {
             statusLine.textContent = "Target reached";
           } else {
@@ -173,7 +138,6 @@
 
         wordsPanel.className = "mode-panel visible";
         wordsGrid.innerHTML = "";
-        wordsKeyboard.innerHTML = "";
 
         if (currentEntry) {
           rows.push(currentEntry);
@@ -197,52 +161,29 @@
 
           wordsGrid.appendChild(rowEl);
         }
-
-        renderWordKeyboard(words.keyboardStates || {});
-      }
-
-      function renderWordKeyboard(keyboardStates) {
-        var rowIndex;
-        var keyIndex;
-
-        for (rowIndex = 0; rowIndex < WORD_KEYBOARD_ROWS.length; rowIndex += 1) {
-          var rowEl = document.createElement("div");
-          rowEl.className = "keyboard-row";
-
-          for (keyIndex = 0; keyIndex < WORD_KEYBOARD_ROWS[rowIndex].length; keyIndex += 1) {
-            var key = WORD_KEYBOARD_ROWS[rowIndex][keyIndex];
-            var keyEl = document.createElement("div");
-            var result = keyboardStates[key];
-            var className = "keyboard-key";
-
-            if (result === "CORRECT") {
-              className += " correct";
-            } else if (result === "PRESENT") {
-              className += " present";
-            } else if (result === "ABSENT") {
-              className += " absent";
-            }
-
-            keyEl.className = className;
-            keyEl.textContent = key;
-            rowEl.appendChild(keyEl);
-          }
-
-          wordsKeyboard.appendChild(rowEl);
-        }
       }
 
       function renderNumbers(numbers) {
+        var sourceIndex;
         var rowIndex;
+        var sourceChip;
+        var rowEl;
 
         numbersPanel.className = "mode-panel visible";
         numbersRowsRemaining.textContent = "Rows left: " + numbers.rowsRemaining;
-        numbersTarget.textContent = numbers.targetNumber;
-        numbersPool.innerHTML = "";
+        numbersTarget.textContent = "Target: " + numbers.targetNumber;
+        numbersSources.innerHTML = "";
         numbersBoard.innerHTML = "";
 
+        for (sourceIndex = 0; sourceIndex < numbers.sourceNumbers.length; sourceIndex += 1) {
+          sourceChip = document.createElement("div");
+          sourceChip.className = "number-chip";
+          sourceChip.textContent = String(numbers.sourceNumbers[sourceIndex]);
+          numbersSources.appendChild(sourceChip);
+        }
+
         for (rowIndex = 0; rowIndex < numbers.rows.length; rowIndex += 1) {
-          var rowEl = document.createElement("div");
+          rowEl = document.createElement("div");
           rowEl.className = "number-row";
           appendNumberTile(rowEl, numbers.rows[rowIndex].leftOperand, rowIndex === numbers.activeRowIndex && numbers.rows[rowIndex].phase === "LEFT_NUMBER", !!numbers.rows[rowIndex].leftOperand, false, false, numbers.rows[rowIndex].isSubmitted);
           appendNumberTile(rowEl, numbers.rows[rowIndex].operator, rowIndex === numbers.activeRowIndex && numbers.rows[rowIndex].phase === "OPERATOR", !!numbers.rows[rowIndex].operator, false, false, numbers.rows[rowIndex].isSubmitted);
@@ -250,29 +191,6 @@
           appendNumberTile(rowEl, "=", false, true, true, false, true);
           appendNumberTile(rowEl, numbers.rows[rowIndex].result, rowIndex === numbers.activeRowIndex && numbers.rows[rowIndex].phase === "READY_TO_SUBMIT", !!numbers.rows[rowIndex].result, false, true, numbers.rows[rowIndex].isSubmitted);
           numbersBoard.appendChild(rowEl);
-        }
-
-        renderNumbersPool(numbers.poolNumbers || []);
-      }
-
-      function renderNumbersPool(poolNumbers) {
-        var index;
-
-        for (index = 0; index < poolNumbers.length; index += 1) {
-          var item = poolNumbers[index];
-          var chip = document.createElement("div");
-          var className = "number-chip";
-
-          if (item.kind === "GENERATED") {
-            className += " generated";
-          }
-          if (item.isUsed) {
-            className += " used";
-          }
-
-          chip.className = className;
-          chip.textContent = String(item.value);
-          numbersPool.appendChild(chip);
         }
       }
 
@@ -304,10 +222,11 @@
       }
 
       function renderKnowledge(knowledge) {
-        var activeIndex = typeof knowledge.activeEntryIndex === "number" ? knowledge.activeEntryIndex : 0;
         var clueText = "Waiting for clue...";
+        var activeIndex = typeof knowledge.activeEntryIndex === "number" ? knowledge.activeEntryIndex : 0;
         var rowIndex;
         var colIndex;
+        var rowEl;
 
         knowledgePanel.className = "mode-panel visible";
         knowledgeCategory.textContent = knowledge.category || "Trivia";
@@ -315,12 +234,12 @@
           clueText = knowledge.entries[activeIndex].clue;
         }
         knowledgeClue.textContent = clueText;
-        knowledgeProgress.textContent = (knowledge.clueLabel || "Clue") + " | " + (knowledge.entryProgressLabel || "");
+        knowledgeProgress.textContent = (knowledge.clueLabel || "Clue") + " - " + (knowledge.entryProgressLabel || "");
         knowledgeGrid.innerHTML = "";
         entryPreview.innerHTML = "";
 
         for (rowIndex = 0; rowIndex < knowledge.grid.length; rowIndex += 1) {
-          var rowEl = document.createElement("div");
+          rowEl = document.createElement("div");
           rowEl.className = "knowledge-grid-row";
           for (colIndex = 0; colIndex < knowledge.grid[rowIndex].length; colIndex += 1) {
             rowEl.appendChild(createKnowledgeCell(knowledge.grid[rowIndex][colIndex]));
@@ -363,7 +282,8 @@
 
       function renderState(state) {
         clearActiveModes();
-        streakLine.textContent = "Current Streak " + state.currentStreak + " | Best Streak " + state.bestStreak;
+
+        streakLine.textContent = "Current Streak " + state.currentStreak + " 🔥 Best Streak " + state.bestStreak;
         setStatusText(state);
         setFooter("Casting live game screen");
 
