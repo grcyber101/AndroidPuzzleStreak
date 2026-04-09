@@ -153,4 +153,7 @@ context.addCustomMessageListener(NAMESPACE, (event) => {
 
 context.start({
   disableIdleTimeout: true,
+  customNamespaces: {
+    [NAMESPACE]: cast.framework.system.MessageType.STRING,
+  },
 });
